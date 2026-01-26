@@ -1,11 +1,6 @@
 import time
 import templates as tpl
 
-# The rules
-# 1. Number must be unique horizontally
-# 2. Number must be unique vertically
-# 3. Number must be unique within the 3x3 square. 
-
 
 def print_grid(grid):
     for row in grid:
@@ -109,71 +104,58 @@ def check_naked_pairs(list_of_possibilities_in_block, flag="None"):
 def check_block_options(option_grid, cell_coordinate):
 
     row_idx,col_idx = cell_coordinate
-
     current_possibilities = option_grid[row_idx][col_idx]
 
-    #print(f"Current possibitiles for cell ({row_idx,col_idx}) {current_possibilities}")
     # Top left block
     if (row_idx <3) and (col_idx <3):
-        coordinates = ((0,0),(0,1),(0,2),(1,0),(1,1),(1,2),(2,0),(2,1),(2,2))
-        coordinates = [(i,j) for i in range(0,3) for j in range(0,3)]
+        coordinates_block = [(i,j) for i in range(0,3) for j in range(0,3)]
 
     # Top middle block
     if (row_idx<3) and (3<= col_idx <6):
-        coordinates = [(i,j) for i in range(0,3) for j in range(3,6)]
+        coordinates_block = [(i,j) for i in range(0,3) for j in range(3,6)]
 
     # Top right block
     if (row_idx<3) and (col_idx >=6):
-        coordinates = [(i,j) for i in range(0,3) for j in range(6,9)]
+        coordinates_block = [(i,j) for i in range(0,3) for j in range(6,9)]
 
     # Middle left block
     if (3 <= row_idx <6) and (col_idx <3):
-        coordinates = [(i,j) for i in range(3,6) for j in range(0,3)]
+        coordinates_block = [(i,j) for i in range(3,6) for j in range(0,3)]
 
     # Middle middle block
     if (3 <= row_idx <6) and (3<= col_idx <6):
-        coordinates = ((3,3),(3,4),(3,5),(4,3),(4,4),(4,5),(5,3),(5,4),(5,5))
-        coordinates = [(i,j) for i in range(3,6) for j in range(3,6)]
+        coordinates_block = [(i,j) for i in range(3,6) for j in range(3,6)]
 
     # Middle right block
     if (3 <= row_idx <6) and (col_idx >=6):
-        coordinates = [(i,j) for i in range(3,6) for j in range(6,9)]
+        coordinates_block = [(i,j) for i in range(3,6) for j in range(6,9)]
 
     # Bottom left block
     if (row_idx >= 6) and (col_idx <3):
-        coordinates = [(i,j) for i in range(6,9) for j in range(0,3)]
+        coordinates_block = [(i,j) for i in range(6,9) for j in range(0,3)]
 
     # Bottom middle block
     if (row_idx >= 6) and (3<= col_idx <6):
-        coordinates = [(i,j) for i in range(6,9) for j in range(3,6)]
+        coordinates_block = [(i,j) for i in range(6,9) for j in range(3,6)]
 
     # Bottom right block
     if (row_idx >= 6) and (col_idx >=6):
-        coordinates = ((6,6),(6,7),(6,8),(7,6),(7,7),(7,8),(8,6),(8,7),(8,8))
-        coordinates = [(i,j) for i in range(6,9) for j in range(6,9)]
+        coordinates_block = [(i,j) for i in range(6,9) for j in range(6,9)]
     
+    coordinates_col = [(i, col_idx) for i in range(0,9)]
+    coordinates_row = [(row_idx,j) for j in range(0,9)]
 
-    #coordinates.remove((row_idx,col_idx))
-    
     list_of_possibilities_in_block = []
-    for i,j in coordinates:
-        list_of_possibilities_in_block.append(((i,j),option_grid[i][j])) # Cell coordinates and possible values
-    
-    #list_of_possibilities_in_block.append(((row_idx,col_idx), option_grid[row_idx][col_idx])) # Add current cell too
-
-    assert len(list_of_possibilities_in_block) == 9
-
-    
-    cols_all = [(i, col_idx) for i in range(0,9)]
-    rows_all = [(row_idx,j) for j in range(0,9)]
-
     list_of_possibitlies_row_total = []
     list_of_possibitlies_col_total = []
 
-    for i,j in rows_all:
+    for i,j in coordinates_block:
+        list_of_possibilities_in_block.append(((i,j),option_grid[i][j])) # Cell coordinates and possible values
+    
+    for i,j in coordinates_row:
         list_of_possibitlies_row_total.append(((i,j), option_grid[i][j]))
 
-    for i,j in cols_all:
+    for i,j in coordinates_col:
         list_of_possibitlies_col_total.append(((i,j), option_grid[i][j]))
 
 
@@ -185,36 +167,11 @@ def check_block_options(option_grid, cell_coordinate):
     list_of_possibitlies_row_total = check_naked_pairs(list_of_possibitlies_row_total, flag='row')
     list_of_possibitlies_col_total= check_naked_pairs(list_of_possibitlies_col_total, flag='col')
 
-    # The block options is in list_of_possibilities_in_block
-    
-    # #print('------')
-
-    # #print(f"Coordinates block {coordinates}")
-    # # Add the row and colum coordinates again too (that are not in the coordinates yet (from the block))
-    # cols = [(i, col_idx) for i in range(0,9) if i != row_idx and (i,col_idx) not in coordinates]
-    # rows = [(row_idx,j) for j in range(0,9) if j != col_idx and (row_idx,j) not in coordinates]
-
-    # coordinates_cols_rows = cols + rows
-
-    # #print(f"Coordinates row and cols {coordinates_cols_rows}")
-
-    # list_of_possibitlies_row_col = []
-
-    # for i,j in coordinates_cols_rows:
-    #     list_of_possibitlies_row_col.append(((i,j), option_grid[i][j]))
-
-    # list_of_possibilities = list_of_possibilities_in_block + list_of_possibitlies_row_col
-
     list_of_possibilities = list_of_possibilities_in_block + list_of_possibitlies_row_total + list_of_possibitlies_col_total
     list_of_possibilities = [item for item in list_of_possibilities if item[0] != cell_coordinate]
 
-    # print('before', len(list_of_possibilities))
-    # for item in list_of_possibilities:
-    #     print(item)
-
     # Deduplicate by coordinate - keep the LONGEST valid list (not [0] or empty)
     coord_dict = {}
-    
     for coordinate, possibilities in list_of_possibilities:
         if coordinate not in coord_dict:
             coord_dict[coordinate] = (coordinate, possibilities)
@@ -236,10 +193,6 @@ def check_block_options(option_grid, cell_coordinate):
                     coord_dict[coordinate] = (coordinate, possibilities)
     
     list_of_possibilities = list(coord_dict.values())
-    # print('---------')
-    # print('after', len(list_of_possibilities))
-    # for item in list_of_possibilities:
-    #     print(item)
 
     #print(f"Possibitlies for cell ({row_idx},{col_idx}) neighbors = {list_of_possibilities} - {len(list_of_possibilities)}")
 
