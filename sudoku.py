@@ -1,0 +1,422 @@
+import time
+
+
+# The rules
+# 1. Number must be unique horizontally
+# 2. Number must be unique vertically
+# 3. Number must be unique within the 3x3 square. 
+
+
+def print_grid(grid):
+    for row in grid:
+        print(f"{row}")
+    return
+
+
+def check_block(grid, temp_options, cell_coordinate):
+
+    row_idx,col_idx = cell_coordinate
+    # Top left block
+    if (row_idx <3) and (col_idx <3):
+        coordinates = ((0,0),(0,1),(0,2),(1,0),(1,1),(1,2),(2,0),(2,1),(2,2))
+        coordinates = [(i,j) for i in range(0,3) for j in range(0,3)]
+
+    # Top middle block
+    if (row_idx<3) and (3<= col_idx <6):
+        coordinates = [(i,j) for i in range(0,3) for j in range(3,6)]
+
+    # Top right block
+    if (row_idx<3) and (col_idx >=6):
+        coordinates = [(i,j) for i in range(0,3) for j in range(6,9)]
+
+    # Middle left block
+    if (3 <= row_idx <6) and (col_idx <3):
+        coordinates = [(i,j) for i in range(3,6) for j in range(0,3)]
+
+    # Middle middle block
+    if (3 <= row_idx <6) and (3<= col_idx <6):
+        coordinates = ((3,3),(3,4),(3,5),(4,3),(4,4),(4,5),(5,3),(5,4),(5,5))
+        coordinates = [(i,j) for i in range(3,6) for j in range(3,6)]
+
+    # Middle right block
+    if (3 <= row_idx <6) and (col_idx >=6):
+        coordinates = [(i,j) for i in range(3,6) for j in range(6,9)]
+
+    # Bottom left block
+    if (row_idx >= 6) and (col_idx <3):
+        coordinates = [(i,j) for i in range(6,9) for j in range(0,3)]
+
+    # Bottom middle block
+    if (row_idx >= 6) and (3<= col_idx <6):
+        coordinates = [(i,j) for i in range(6,9) for j in range(3,6)]
+
+    # Bottom right block
+    if (row_idx >= 6) and (col_idx >=6):
+        coordinates = ((6,6),(6,7),(6,8),(7,6),(7,7),(7,8),(8,6),(8,7),(8,8))
+        coordinates = [(i,j) for i in range(6,9) for j in range(6,9)]
+    
+    coordinates.remove((row_idx,col_idx))
+
+    for i,j in coordinates:
+        value = grid[i][j]
+        if value in temp_options:
+            temp_options.remove(value)
+    
+    return temp_options
+
+
+def check_naked_pairs(list_of_possibilities_in_block, flag="None"):
+    # Get naked pairs if any. 
+    pairs = []
+    naked_pairs = []
+    for coordinate, values in list_of_possibilities_in_block:
+        if len(values) == 2:
+            # Check if we already have a pair with the same values
+            found_match = False
+            for pair_coord, pair_values in pairs:
+                if values == pair_values:
+                    # Found a naked pair!
+                    naked_pairs.append((pair_coord, pair_values))
+                    naked_pairs.append((coordinate, values))
+                    #print(f"Naked pair found! {naked_pairs} - flag is {flag}")
+                    found_match = True
+                    break
+            if not found_match:
+                pairs.append((coordinate, values))
+
+    if len(naked_pairs) != 0:
+        #print(f"Naked pairs", naked_pairs)
+        
+        # Get the coordinates that ARE in the naked pair (to exclude them from removal)
+        naked_pair_coordinates = set(coord for coord, vals in naked_pairs)
+
+        for coordinate, values in list_of_possibilities_in_block:
+            # Skip if this cell IS part of the naked pair
+            if coordinate in naked_pair_coordinates:
+                continue
+            
+            # Remove naked pair values from other cells
+            for naked_coord, naked_values in naked_pairs:
+                for naked_value in naked_values:
+                    if naked_value in values:
+                        print(f"|---------- Removed {naked_value} from {values} in cell {coordinate} (naked pair, {flag})")
+                        values.remove(naked_value)
+
+    return list_of_possibilities_in_block
+
+
+
+def check_block_options(option_grid, cell_coordinate):
+
+    row_idx,col_idx = cell_coordinate
+
+    current_possibilities = option_grid[row_idx][col_idx]
+
+    #print(f"Current possibitiles for cell ({row_idx,col_idx}) {current_possibilities}")
+    # Top left block
+    if (row_idx <3) and (col_idx <3):
+        coordinates = ((0,0),(0,1),(0,2),(1,0),(1,1),(1,2),(2,0),(2,1),(2,2))
+        coordinates = [(i,j) for i in range(0,3) for j in range(0,3)]
+
+    # Top middle block
+    if (row_idx<3) and (3<= col_idx <6):
+        coordinates = [(i,j) for i in range(0,3) for j in range(3,6)]
+
+    # Top right block
+    if (row_idx<3) and (col_idx >=6):
+        coordinates = [(i,j) for i in range(0,3) for j in range(6,9)]
+
+    # Middle left block
+    if (3 <= row_idx <6) and (col_idx <3):
+        coordinates = [(i,j) for i in range(3,6) for j in range(0,3)]
+
+    # Middle middle block
+    if (3 <= row_idx <6) and (3<= col_idx <6):
+        coordinates = ((3,3),(3,4),(3,5),(4,3),(4,4),(4,5),(5,3),(5,4),(5,5))
+        coordinates = [(i,j) for i in range(3,6) for j in range(3,6)]
+
+    # Middle right block
+    if (3 <= row_idx <6) and (col_idx >=6):
+        coordinates = [(i,j) for i in range(3,6) for j in range(6,9)]
+
+    # Bottom left block
+    if (row_idx >= 6) and (col_idx <3):
+        coordinates = [(i,j) for i in range(6,9) for j in range(0,3)]
+
+    # Bottom middle block
+    if (row_idx >= 6) and (3<= col_idx <6):
+        coordinates = [(i,j) for i in range(6,9) for j in range(3,6)]
+
+    # Bottom right block
+    if (row_idx >= 6) and (col_idx >=6):
+        coordinates = ((6,6),(6,7),(6,8),(7,6),(7,7),(7,8),(8,6),(8,7),(8,8))
+        coordinates = [(i,j) for i in range(6,9) for j in range(6,9)]
+    
+
+    #coordinates.remove((row_idx,col_idx))
+    
+    list_of_possibilities_in_block = []
+    for i,j in coordinates:
+        list_of_possibilities_in_block.append(((i,j),option_grid[i][j])) # Cell coordinates and possible values
+    
+    #list_of_possibilities_in_block.append(((row_idx,col_idx), option_grid[row_idx][col_idx])) # Add current cell too
+
+    assert len(list_of_possibilities_in_block) == 9
+
+    
+    cols_all = [(i, col_idx) for i in range(0,9)]
+    rows_all = [(row_idx,j) for j in range(0,9)]
+
+    list_of_possibitlies_row_total = []
+    list_of_possibitlies_col_total = []
+
+    for i,j in rows_all:
+        list_of_possibitlies_row_total.append(((i,j), option_grid[i][j]))
+
+    for i,j in cols_all:
+        list_of_possibitlies_col_total.append(((i,j), option_grid[i][j]))
+
+
+    assert len(list_of_possibilities_in_block) == 9
+    assert len(list_of_possibitlies_row_total) == 9
+    assert len(list_of_possibitlies_col_total) == 9
+
+    list_of_possibilities_in_block = check_naked_pairs(list_of_possibilities_in_block, flag='block')
+    list_of_possibitlies_row_total = check_naked_pairs(list_of_possibitlies_row_total, flag='row')
+    list_of_possibitlies_col_total= check_naked_pairs(list_of_possibitlies_col_total, flag='col')
+
+    # The block options is in list_of_possibilities_in_block
+    
+    # #print('------')
+
+    # #print(f"Coordinates block {coordinates}")
+    # # Add the row and colum coordinates again too (that are not in the coordinates yet (from the block))
+    # cols = [(i, col_idx) for i in range(0,9) if i != row_idx and (i,col_idx) not in coordinates]
+    # rows = [(row_idx,j) for j in range(0,9) if j != col_idx and (row_idx,j) not in coordinates]
+
+    # coordinates_cols_rows = cols + rows
+
+    # #print(f"Coordinates row and cols {coordinates_cols_rows}")
+
+    # list_of_possibitlies_row_col = []
+
+    # for i,j in coordinates_cols_rows:
+    #     list_of_possibitlies_row_col.append(((i,j), option_grid[i][j]))
+
+    # list_of_possibilities = list_of_possibilities_in_block + list_of_possibitlies_row_col
+
+    list_of_possibilities = list_of_possibilities_in_block + list_of_possibitlies_row_total + list_of_possibitlies_col_total
+    list_of_possibilities = [item for item in list_of_possibilities if item[0] != cell_coordinate]
+
+    # print('before', len(list_of_possibilities))
+    # for item in list_of_possibilities:
+    #     print(item)
+
+    # Deduplicate by coordinate - keep the LONGEST valid list (not [0] or empty)
+    coord_dict = {}
+    
+    for coordinate, possibilities in list_of_possibilities:
+        if coordinate not in coord_dict:
+            coord_dict[coordinate] = (coordinate, possibilities)
+        else:
+            existing_coord, existing_possibilities = coord_dict[coordinate]
+            
+            # Skip [0] (filled cells) and empty lists when comparing
+            existing_is_valid = existing_possibilities != [0] and len(existing_possibilities) > 0
+            new_is_valid = possibilities != [0] and len(possibilities) > 0
+            
+            # Prefer valid lists over invalid ones
+            if new_is_valid and not existing_is_valid:
+                coord_dict[coordinate] = (coordinate, possibilities)
+            # If both valid, keep the one with MORE possibilities (intersection would be ideal, but this is simpler)
+            elif new_is_valid and existing_is_valid:
+                # Actually for counting occurrences, we want to keep all possibilities
+                # So keep the longer list
+                if len(possibilities) > len(existing_possibilities):
+                    coord_dict[coordinate] = (coordinate, possibilities)
+    
+    list_of_possibilities = list(coord_dict.values())
+    # print('---------')
+    # print('after', len(list_of_possibilities))
+    # for item in list_of_possibilities:
+    #     print(item)
+
+    #print(f"Possibitlies for cell ({row_idx},{col_idx}) neighbors = {list_of_possibilities} - {len(list_of_possibilities)}")
+
+    occurences = {}
+    for num in range(1,10):
+        occurences[num] = 0
+
+    for coordinate,values in list_of_possibilities:
+        for item in values:
+            if item == 0:
+                pass
+            else:
+                occurences[item] += 1
+
+    #print(occurences)
+
+    key_rem = 0
+    value_to_fill = 0
+    for num in current_possibilities:
+        #print(f"Value {num} has already have {occurences[num]} occurences")
+        if occurences[num] == 0:
+            key_rem +=1
+            value_to_fill = num
+    
+    if key_rem == 1:
+        print('We have a unique cell!!')
+        #print(f"----------------- {value_to_fill} is a solution for cell ({row_idx},{col_idx})")
+        return value_to_fill
+    else:
+        return None
+    
+
+def solve_sudoku(values, grid, counter,total_to_fillin):
+        
+    if counter == total_to_fillin:
+        print(f"We're done!")
+        return grid
+
+    options_grid = [[[0] for i in range(9)] for j in range(9)]
+
+    for row_idx in range(len(grid)):
+        for col_idx in range(len(grid[0])):
+
+            cell_value = grid[row_idx][col_idx]
+            
+            possibilities = []
+
+            # Check if value is already filled in, if not we proceed. 
+            if cell_value != 0:
+                options_grid[row_idx][col_idx] = [0]
+                #print(f"Cell is already occupied ({row_idx},{col_idx})")
+            else:
+                for v in values:
+                    row = grid[row_idx]
+                    col = [row[col_idx] for row in grid]
+                    if (v not in row) and (v not in col):
+                        possibilities.append(v)
+                        possibilities = check_block(grid,possibilities,(row_idx,col_idx))
+                
+                #print(f"Possibilities are {possibilities} for cell ({row_idx},{col_idx})")
+                options_grid[row_idx][col_idx] = possibilities
+
+     # ...existing code...
+    #print(f"grid options {counter}/{total_to_fillin}")
+    #print_grid(options_grid)
+    #print('sssssssssssssssss')
+
+    fill_in_value = None
+    for row_idx in range(len(grid)):
+        for col_idx in range(len(grid[0])):
+
+            cell_value = options_grid[row_idx][col_idx]
+
+            if cell_value == [0]:
+                pass
+                # print('Cell already filled in')
+            
+            elif len(cell_value) == 1:
+                fill_in_value = cell_value[0]
+            else:
+                fill_in_value = check_block_options(options_grid,(row_idx,col_idx))
+
+            if fill_in_value == None:
+                #print('Could not update cell')
+                pass
+            else:
+                print(f"We can update cell ({row_idx},{col_idx}) with value {fill_in_value}")
+                grid[row_idx][col_idx] = fill_in_value
+                counter += 1
+                print(f"Solved {counter} out of {total_to_fillin}")
+                return solve_sudoku(values,grid, counter,total_to_fillin)
+    
+    print("We're stuck here...")
+    return
+
+
+
+test_grid1 = [[0, 0, 9, 8, 0, 1, 5, 0, 6],\
+            [0, 0, 0, 3, 6, 0, 8, 0, 9],\
+            [0, 0, 0, 0, 0, 0, 1, 0, 2],\
+            [0, 0, 0, 0, 0, 0, 0, 1, 5],\
+            [3, 5, 0, 0, 0, 0, 0, 9, 4],\
+            [6, 7, 0, 0, 0, 0, 0, 0, 8],\
+            [8, 0, 3, 0, 0, 0, 0, 0, 7],\
+            [0, 0, 0, 0, 3, 8, 0, 0, 1],\
+            [4, 0, 5, 6, 0, 7, 9, 8, 3]]
+
+test_grid2 = [[7, 0, 9, 8, 0, 1, 5, 0, 6],\
+            [1, 0, 0, 3, 6, 0, 8, 0, 9],\
+            [5, 0, 0, 0, 0, 0, 1, 0, 2],\
+            [2, 0, 0, 0, 0, 0, 0, 1, 5],\
+            [3, 5, 0, 0, 0, 0, 0, 9, 4],\
+            [6, 7, 0, 0, 0, 0, 0, 0, 8],\
+            [8, 0, 3, 0, 0, 0, 0, 0, 7],\
+            [9, 0, 0, 0, 3, 8, 0, 0, 1],\
+            [4, 0, 5, 6, 0, 7, 9, 8, 3]]
+
+test_grid3 = [[7, 3, 9, 8, 2, 1, 5, 4, 6],\
+            [1, 4, 0, 3, 6, 0, 8, 7, 9],\
+            [5, 8, 6, 0, 0, 0, 1, 0, 2],\
+            [2, 0, 0, 7, 4, 3, 0, 1, 5],\
+            [3, 5, 1, 2, 8, 6, 7, 9, 4],\
+            [6, 7, 0, 1, 5, 9, 3, 2, 8],\
+            [8, 0, 3, 5, 9, 2, 4, 6, 7],\
+            [9, 0, 0, 0, 3, 8, 0, 0, 1],\
+            [4, 0, 5, 6, 0, 7, 9, 8, 3]]
+
+test_grid4 = [[7, 3, 9, 8, 2, 1, 5, 4, 6],\
+            [1, 4, 0, 3, 0, 0, 8, 7, 9],\
+            [0, 8, 6, 0, 0, 0, 1, 0, 2],\
+            [2, 0, 0, 7, 4, 3, 0, 1, 5],\
+            [0, 5, 1, 2, 8, 6, 7, 0, 4],\
+            [6, 7, 0, 1, 5, 9, 3, 2, 8],\
+            [0, 0, 3, 5, 0, 2, 4, 6, 7],\
+            [9, 0, 0, 0, 3, 8, 0, 0, 1],\
+            [4, 0, 5, 6, 0, 7, 9, 8, 3]]
+
+test_grid5 = [[6, 3, 9 ,0, 0, 8, 0, 0, 4],\
+              [0, 8, 7, 0, 0, 4, 0, 0, 9],\
+              [0, 2, 4, 0, 0, 0, 3, 8, 0],\
+              [0, 0, 5, 0, 8, 6, 7, 2, 1],\
+              [0, 0, 8, 1, 0, 2, 4, 0, 0],\
+              [2, 1, 6, 4, 5, 7, 8, 9, 3],\
+              [0, 5, 3, 8, 0, 0, 6, 0, 0],\
+              [8, 6, 1, 7, 0, 0, 9, 0, 0],\
+              [9, 0, 2, 6, 0, 0, 1, 0, 8]]
+
+test_grid6 = [[0, 0, 0, 0, 0, 0, 0, 1, 8],\
+              [0, 0, 0, 7, 0, 4, 5, 0, 0],\
+              [0, 5, 6, 0, 0, 0, 0, 0, 4],\
+              [0, 8, 4, 0, 0, 0, 0, 0, 3],\
+              [0, 2, 0, 9, 0, 5, 0, 4, 0],\
+              [1, 0, 0, 0, 0, 0, 8, 7, 0],\
+              [6, 0, 0, 0, 0, 0, 2, 3, 0],\
+              [0, 0, 5, 6, 0, 7, 0, 0, 0],\
+              [2, 1, 0, 0, 0, 0, 0, 0, 0]]
+
+
+test_grid = test_grid2
+start = time.time()
+values = [1,2,3,4,5,6,7,8,9]
+counter = 0
+total_to_fillin = 0
+for i in range(9):
+    for j in range(9):
+        if test_grid[i][j] == 0:
+            total_to_fillin+=1
+
+print_grid(test_grid)
+print('---------')
+solution = solve_sudoku(values,test_grid, counter,total_to_fillin)
+print_grid(solution)
+end = time.time()
+print(f"Solve took {round(end-start,5)} seconds")
+
+## To add: 
+## - Naked Triples
+## - Omission   (if this is done i'll probably solve anything)
+## - hidden pairs / hidden triplets / quads)
+## - X wing / Swordfish / XY Wing / Unique Rectangle. 
