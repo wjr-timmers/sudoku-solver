@@ -58,8 +58,8 @@ def solve_many_sudokus_parallel(grids, num_puzzles, chunk_size, num_workers):
     print(f"Split {len(grids)} puzzles into {len(chunks)} chunks of {chunk_size} each")
     print(f"Using {num_workers} workers")
     
-    with Pool(num_workers) as pool:
-        results = pool.map(solve_chunk, chunks)
+    with Pool(processes=num_workers) as pool:
+        results = list(pool.imap(solve_chunk, chunks))
     
     total_success = sum(r[0] for r in results)
     all_times = [t for r in results for t in r[1]]
