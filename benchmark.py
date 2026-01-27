@@ -83,7 +83,8 @@ def main():
     success_count, times = solve_many_sudokus_parallel(grids, num_puzzles, chunk_size, num_workers)
     total_time = time.time() - start
 
-    print(f"Solved {success_count} puzzles ({round((success_count/num_puzzles)*100,2)}%) in {total_time:.2f}s total")
+    mins, secs = divmod(total_time, 60)
+    print(f"Solved {success_count} puzzles ({round((success_count/num_puzzles)*100,2)}%) in {int(mins)}m {secs:.2f}s total")
     print(f"Average {sum(times)/success_count:.5f} seconds per puzzle")
 
 
