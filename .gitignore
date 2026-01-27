@@ -4,3 +4,4 @@ __pycache__/
 *.pyd
 sudoku.csv
 archive.zip
+logs/
