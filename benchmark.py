@@ -4,6 +4,7 @@ import csv
 from multiprocessing import Pool, cpu_count
 import argparse
 
+## DATA SET: https://www.kaggle.com/datasets/rohanrao/sudoku?resource=download
 
 def read_string(puzzle_string):
     current_grid = []
