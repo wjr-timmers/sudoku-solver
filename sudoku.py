@@ -1,6 +1,6 @@
 import time
-import templates as tpl
 
+VALUES = [1,2,3,4,5,6,7,8,9]
 
 def print_grid(grid):
     for row in grid:
@@ -8,7 +8,7 @@ def print_grid(grid):
     return
 
 
-def check_block(grid, temp_options, cell_coordinate):
+def check_block(grid, temp_options, cell_coordinate, verbose=False):
 
     row_idx,col_idx = cell_coordinate
     # Top left block
@@ -60,7 +60,7 @@ def check_block(grid, temp_options, cell_coordinate):
     return temp_options
 
 
-def check_naked_pairs(list_of_possibilities_in_block, flag="None"):
+def check_naked_pairs(list_of_possibilities_in_block, flag="None",verbose=False):
     # Get naked pairs if any. 
     pairs = []
     naked_pairs = []
@@ -94,14 +94,15 @@ def check_naked_pairs(list_of_possibilities_in_block, flag="None"):
             for naked_coord, naked_values in naked_pairs:
                 for naked_value in naked_values:
                     if naked_value in values:
-                        print(f"|---------- Removed {naked_value} from {values} in cell {coordinate} (naked pair, {flag})")
+                        if verbose:
+                            print(f"|---------- Removed {naked_value} from {values} in cell {coordinate} (naked pair, {flag})")
                         values.remove(naked_value)
 
     return list_of_possibilities_in_block
 
 
 
-def check_block_options(option_grid, cell_coordinate):
+def check_block_options(option_grid, cell_coordinate, verbose=False):
 
     row_idx,col_idx = cell_coordinate
     current_possibilities = option_grid[row_idx][col_idx]
@@ -163,9 +164,9 @@ def check_block_options(option_grid, cell_coordinate):
     assert len(list_of_possibitlies_row_total) == 9
     assert len(list_of_possibitlies_col_total) == 9
 
-    list_of_possibilities_in_block = check_naked_pairs(list_of_possibilities_in_block, flag='block')
-    list_of_possibitlies_row_total = check_naked_pairs(list_of_possibitlies_row_total, flag='row')
-    list_of_possibitlies_col_total= check_naked_pairs(list_of_possibitlies_col_total, flag='col')
+    list_of_possibilities_in_block = check_naked_pairs(list_of_possibilities_in_block, flag='block',verbose=verbose)
+    list_of_possibitlies_row_total = check_naked_pairs(list_of_possibitlies_row_total, flag='row',verbose=verbose)
+    list_of_possibitlies_col_total= check_naked_pairs(list_of_possibitlies_col_total, flag='col',verbose=verbose)
 
     list_of_possibilities = list_of_possibilities_in_block + list_of_possibitlies_row_total + list_of_possibitlies_col_total
     list_of_possibilities = [item for item in list_of_possibilities if item[0] != cell_coordinate]
@@ -218,18 +219,21 @@ def check_block_options(option_grid, cell_coordinate):
             value_to_fill = num
     
     if key_rem == 1:
-        print('We have a unique cell!!')
+        if verbose:
+            print('We have a unique cell!!')
         #print(f"----------------- {value_to_fill} is a solution for cell ({row_idx},{col_idx})")
         return value_to_fill
     else:
         return None
     
 
-def solve_sudoku(values, grid, counter,total_to_fillin):
+def solve_sudoku(grid, counter,total_to_fillin, verbose=False):
         
     if counter == total_to_fillin:
-        print(f"We're done!")
-        return grid
+        if verbose:
+            print(f"We're done!")
+        success = True
+        return grid, success
 
     options_grid = [[[0] for i in range(9)] for j in range(9)]
 
@@ -245,12 +249,12 @@ def solve_sudoku(values, grid, counter,total_to_fillin):
                 options_grid[row_idx][col_idx] = [0]
                 #print(f"Cell is already occupied ({row_idx},{col_idx})")
             else:
-                for v in values:
+                for v in VALUES:
                     row = grid[row_idx]
                     col = [row[col_idx] for row in grid]
                     if (v not in row) and (v not in col):
                         possibilities.append(v)
-                        possibilities = check_block(grid,possibilities,(row_idx,col_idx))
+                        possibilities = check_block(grid,possibilities,(row_idx,col_idx),verbose=verbose)
                 
                 #print(f"Possibilities are {possibilities} for cell ({row_idx},{col_idx})")
                 options_grid[row_idx][col_idx] = possibilities
@@ -273,35 +277,37 @@ def solve_sudoku(values, grid, counter,total_to_fillin):
             elif len(cell_value) == 1:
                 fill_in_value = cell_value[0]
             else:
-                fill_in_value = check_block_options(options_grid,(row_idx,col_idx))
+                fill_in_value = check_block_options(options_grid,(row_idx,col_idx), verbose=verbose)
 
             if fill_in_value == None:
                 #print('Could not update cell')
                 pass
             else:
-                print(f"We can update cell ({row_idx},{col_idx}) with value {fill_in_value}")
+                if verbose:
+                    print(f"We can update cell ({row_idx},{col_idx}) with value {fill_in_value}")
                 grid[row_idx][col_idx] = fill_in_value
                 counter += 1
-                print(f"Solved {counter} out of {total_to_fillin}")
-                return solve_sudoku(values,grid, counter,total_to_fillin)
+                if verbose:
+                    print(f"Solved {counter} out of {total_to_fillin}")
+                return solve_sudoku(grid, counter,total_to_fillin, verbose=verbose)
     
-    print("We're stuck here...")
-    return
+    if verbose:
+        print("We're stuck here...")
+    success = False
+    return grid,success
 
 
-test_grid = tpl.test_grid2
-start = time.time()
-values = [1,2,3,4,5,6,7,8,9]
-counter = 0
-total_to_fillin = 0
-for i in range(9):
-    for j in range(9):
-        if test_grid[i][j] == 0:
-            total_to_fillin+=1
+# import templates as tpl
 
-print_grid(test_grid)
-print('---------')
-solution = solve_sudoku(values,test_grid, counter,total_to_fillin)
-print_grid(solution)
-end = time.time()
-print(f"Solve took {round(end-start,5)} seconds")
+# test_grid = tpl.test_grid2
+# start = time.time()
+# counter = 0
+# count_zeros = lambda grid: sum(row.count(0) for row in grid)
+# total_to_fillin = count_zeros(test_grid)
+
+# print_grid(test_grid)
+# print('---------')
+# solution = solve_sudoku(test_grid, counter,total_to_fillin)
+# print_grid(solution)
+# end = time.time()
+# print(f"Solve took {round(end-start,5)} seconds")

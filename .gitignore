@@ -2,3 +2,5 @@ __pycache__/
 *.pyc
 *.pyo
 *.pyd
+sudoku.csv
+archive.zip
