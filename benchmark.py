@@ -43,9 +43,9 @@ def solve_chunk(chunk):
             assert solution == solution_data
             success_count += 1
             times.append(round(end - start, 5))
-        else:
-            print(solution)
-    
+        # else:
+        #     print(solution)
+
     return success_count, times
 
 

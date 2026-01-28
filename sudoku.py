@@ -100,13 +100,43 @@ def check_hidden(list_of_possibilities_in_block, flag="None", verbose=False, hid
                             continue
                         else:
                             if verbose:
-                                type_name = {2: "pair", 3: "triple", 4: "quad"}.get(hidden_quant, "set")
+                                type_name = {1: "single", 2: "pair", 3: "triple", 4: "quad"}.get(hidden_quant, "set")
                                 print(f"|-0--0--0-- Removed {v} from cell {coordinate} (hidden {type_name}, {flag})")
                             values.remove(v)
 
 
     return list_of_possibilities_in_block
 
+def check_naked_single(list_of_possibilities_in_block, flag="None",verbose=False):
+    
+    naked_singles= []
+    singles = [x for x in list_of_possibilities_in_block if (len(x[1])==1)]
+
+    for (idx1, val1) in itertools.combinations(singles,1):
+        single_values = [val1]
+        single_indices = [idx1]
+        union = set().union(*single_values)
+
+        if len(union) == 1:
+            naked_singles.append((idx1,val1))
+
+    if len(naked_singles) != 0:
+        naked_pair_coordinates = set(coord for coord, vals in naked_singles)
+
+        for coordinate, values in list_of_possibilities_in_block:
+            # Skip if this cell IS part of the naked single
+            if coordinate in naked_pair_coordinates:
+                continue
+            
+            # Remove naked single values from other cells
+            for naked_coord, naked_values in naked_singles:
+                for naked_value in naked_values:
+                    if naked_value in values:
+                        if verbose:
+                            print(f"|---------- Removed {naked_value} from {values} in cell {coordinate} (naked single, {flag})")
+                        values.remove(naked_value)
+
+    return list_of_possibilities_in_block
 
 def check_naked_pairs(list_of_possibilities_in_block, flag="None",verbose=False):
     
@@ -284,8 +314,8 @@ def check_block_options(option_grid, cell_coordinate, verbose=False):
     list_of_possibitlies_row_total = check_naked_quads(list_of_possibitlies_col_total, flag="row",verbose=verbose)
     list_of_possibitlies_col_total = check_naked_quads(list_of_possibitlies_row_total, flag="col",verbose=verbose)
 
-    # Check the hidden pairs, triples and quads
-    for i in range(2,5):
+    # Check the hidden single, pairs, triples and quads
+    for i in range(1,5):
         list_of_possibilities_block_total = check_hidden(list_of_possibilities_block_total, flag="block",verbose=verbose, hidden_quant=i)
         list_of_possibitlies_row_total = check_hidden(list_of_possibitlies_col_total, flag="row",verbose=verbose, hidden_quant=i)
         list_of_possibitlies_col_total = check_hidden(list_of_possibitlies_row_total, flag="col",verbose=verbose, hidden_quant=i)
