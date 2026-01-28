@@ -1,5 +1,6 @@
 import time
 import itertools
+from collections import defaultdict
 
 VALUES = [1,2,3,4,5,6,7,8,9]
 
@@ -61,6 +62,52 @@ def check_block(grid, temp_options, cell_coordinate, verbose=False):
     return temp_options
 
 
+def check_hidden(list_of_possibilities_in_block, flag="None", verbose=False, hidden_quant=2):
+    
+    occurences = {}
+    for v in VALUES:
+        occurences[v] = {
+        'count': 0, 
+        'coordinates': []
+    }
+
+    #print(list_of_possibilities_in_block)
+    for coordinate, values in list_of_possibilities_in_block:
+        if values == [0]:
+            continue
+        else:
+            for value in values:
+                occurences[value]['count'] += 1
+                occurences[value]['coordinates'].append(coordinate)
+
+    coord_groups = defaultdict(list)
+
+    for num, data in occurences.items():
+        if data['count'] == hidden_quant:
+            coord_key = tuple(data['coordinates'])
+            coord_groups[coord_key].append(num)
+
+    for coords, numbers_hidden in coord_groups.items():
+        if len(numbers_hidden) == hidden_quant:
+            #print(f"|------------- Hidden Quant Found! Numbers {numbers_hidden} at {coords}")
+
+            coords = list(coords)
+
+            for coordinate, values in list_of_possibilities_in_block:
+                if coordinate in coords:
+                    for v in values[:]:
+                        if v in numbers_hidden:
+                            continue
+                        else:
+                            if verbose:
+                                type_name = {2: "pair", 3: "triple", 4: "quad"}.get(hidden_quant, "set")
+                                print(f"|-0--0--0-- Removed {v} from cell {coordinate} (hidden {type_name}, {flag})")
+                            values.remove(v)
+
+
+    return list_of_possibilities_in_block
+
+
 def check_naked_pairs(list_of_possibilities_in_block, flag="None",verbose=False):
     
     naked_pairs= []
@@ -92,6 +139,7 @@ def check_naked_pairs(list_of_possibilities_in_block, flag="None",verbose=False)
                         values.remove(naked_value)
 
     return list_of_possibilities_in_block
+
 
 def check_naked_triples(list_of_possibilities_in_block, flag="None",verbose=False):
     
@@ -224,7 +272,6 @@ def check_block_options(option_grid, cell_coordinate, verbose=False):
     assert len(list_of_possibitlies_row_total) == 9
     assert len(list_of_possibitlies_col_total) == 9
 
-
     list_of_possibilities_block_total = check_naked_pairs(list_of_possibilities_block_total, flag='block',verbose=verbose)
     list_of_possibitlies_row_total = check_naked_pairs(list_of_possibitlies_row_total, flag='row',verbose=verbose)
     list_of_possibitlies_col_total= check_naked_pairs(list_of_possibitlies_col_total, flag='col',verbose=verbose)
@@ -237,8 +284,15 @@ def check_block_options(option_grid, cell_coordinate, verbose=False):
     list_of_possibitlies_row_total = check_naked_quads(list_of_possibitlies_col_total, flag="row",verbose=verbose)
     list_of_possibitlies_col_total = check_naked_quads(list_of_possibitlies_row_total, flag="col",verbose=verbose)
 
+    # Check the hidden pairs, triples and quads
+    for i in range(2,5):
+        list_of_possibilities_block_total = check_hidden(list_of_possibilities_block_total, flag="block",verbose=verbose, hidden_quant=i)
+        list_of_possibitlies_row_total = check_hidden(list_of_possibitlies_col_total, flag="row",verbose=verbose, hidden_quant=i)
+        list_of_possibitlies_col_total = check_hidden(list_of_possibitlies_row_total, flag="col",verbose=verbose, hidden_quant=i)
+
     list_of_possibilities = list_of_possibilities_block_total + list_of_possibitlies_row_total + list_of_possibitlies_col_total
     list_of_possibilities = [item for item in list_of_possibilities if item[0] != cell_coordinate]
+
 
     # Deduplicate by coordinate - keep the LONGEST valid list (not [0] or empty)
     coord_dict = {}
@@ -368,7 +422,7 @@ def solve_sudoku(grid, counter,total_to_fillin, verbose=False):
 
 # import templates as tpl
 
-# test_grid = tpl.test_grid1
+# test_grid = tpl.test_grid7
 # start = time.time()
 # counter = 0
 # count_zeros = lambda grid: sum(row.count(0) for row in grid)
