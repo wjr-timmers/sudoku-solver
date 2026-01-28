@@ -112,7 +112,7 @@ def check_naked_single(list_of_possibilities_in_block, flag="None",verbose=False
     naked_singles= []
     singles = [x for x in list_of_possibilities_in_block if (len(x[1])==1)]
 
-    for (idx1, val1) in itertools.combinations(singles,1):
+    for (idx1, val1) in singles:
         single_values = [val1]
         single_indices = [idx1]
         union = set().union(*single_values)
@@ -131,7 +131,7 @@ def check_naked_single(list_of_possibilities_in_block, flag="None",verbose=False
             # Remove naked single values from other cells
             for naked_coord, naked_values in naked_singles:
                 for naked_value in naked_values:
-                    if naked_value in values:
+                    if naked_value in values[:]:
                         if verbose:
                             print(f"|---------- Removed {naked_value} from {values} in cell {coordinate} (naked single, {flag})")
                         values.remove(naked_value)
@@ -163,7 +163,7 @@ def check_naked_pairs(list_of_possibilities_in_block, flag="None",verbose=False)
             # Remove naked pair values from other cells
             for naked_coord, naked_values in naked_pairs:
                 for naked_value in naked_values:
-                    if naked_value in values:
+                    if naked_value in values[:]:
                         if verbose:
                             print(f"|---------- Removed {naked_value} from {values} in cell {coordinate} (naked pair, {flag})")
                         values.remove(naked_value)
@@ -197,7 +197,7 @@ def check_naked_triples(list_of_possibilities_in_block, flag="None",verbose=Fals
             # Remove naked triple values from other cells
             for naked_coord, naked_values in naked_triples:
                 for naked_value in naked_values:
-                    if naked_value in values:
+                    if naked_value in values[:]:
                         if verbose:
                             print(f"|---------- Removed {naked_value} from {values} in cell {coordinate} (naked triple, {flag})")
                         values.remove(naked_value)
@@ -232,7 +232,7 @@ def check_naked_quads(list_of_possibilities_in_block, flag="None",verbose=False)
             # Remove naked quad values from other cells
             for naked_coord, naked_values in naked_quads:
                 for naked_value in naked_values:
-                    if naked_value in values:
+                    if naked_value in values[:]:
                         if verbose:
                             print(f"|---------- Removed {naked_value} from {values} in cell {coordinate} (naked quad, {flag})")
                         values.remove(naked_value)
@@ -301,6 +301,10 @@ def check_block_options(option_grid, cell_coordinate, verbose=False):
     assert len(list_of_possibilities_block_total) == 9
     assert len(list_of_possibitlies_row_total) == 9
     assert len(list_of_possibitlies_col_total) == 9
+
+    list_of_possibilities_block_total = check_naked_single(list_of_possibilities_block_total, flag='block',verbose=verbose)
+    list_of_possibitlies_row_total = check_naked_single(list_of_possibitlies_row_total, flag='row',verbose=verbose)
+    list_of_possibitlies_col_total= check_naked_single(list_of_possibitlies_col_total, flag='col',verbose=verbose)
 
     list_of_possibilities_block_total = check_naked_pairs(list_of_possibilities_block_total, flag='block',verbose=verbose)
     list_of_possibitlies_row_total = check_naked_pairs(list_of_possibitlies_row_total, flag='row',verbose=verbose)
@@ -450,24 +454,24 @@ def solve_sudoku(grid, counter,total_to_fillin, verbose=False):
     return grid,success
 
 
-# import templates as tpl
+import templates as tpl
 
-# test_grid = tpl.test_grid7
-# start = time.time()
-# counter = 0
-# count_zeros = lambda grid: sum(row.count(0) for row in grid)
-# total_to_fillin = count_zeros(test_grid)
+test_grid = tpl.test_grid10
+start = time.time()
+counter = 0
+count_zeros = lambda grid: sum(row.count(0) for row in grid)
+total_to_fillin = count_zeros(test_grid)
 
-# print_grid(test_grid)
-# print('---------')
-# solution, success_flag = solve_sudoku(test_grid, counter, total_to_fillin, verbose=True)
-# print('---------')
-# if success_flag:
-#     print("Final solution:")
-# else:
-#     print("How far we got:")
-# print_grid(solution)
-# print('---------')
-# end = time.time()
-# if success_flag:
-#     print(f"Solve took {round(end-start,5)} seconds")
+print_grid(test_grid)
+print('---------')
+solution, success_flag = solve_sudoku(test_grid, counter, total_to_fillin, verbose=True)
+print('---------')
+if success_flag:
+    print("Final solution:")
+else:
+    print("How far we got:")
+print_grid(solution)
+print('---------')
+end = time.time()
+if success_flag:
+    print(f"Solve took {round(end-start,5)} seconds")
