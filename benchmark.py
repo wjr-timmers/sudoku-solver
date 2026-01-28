@@ -72,7 +72,7 @@ def main():
     parser = argparse.ArgumentParser(description="Sudoku Solver Benchmark")
     parser.add_argument('--num_puzzles', type=int, default=1000, help="Number of puzzles to solve (max is 9 million)")
     parser.add_argument('--chunk_size', type=int, default=100, help="Number of puzzles to allocate per process")
-    parser.add_argument('--num_workers', type=int, default=2, help="Number of threads to allocate for computing")
+    parser.add_argument('--num_workers', type=int, default=10, help="Number of threads to allocate for computing")
     args = parser.parse_args()
 
     num_puzzles = args.num_puzzles

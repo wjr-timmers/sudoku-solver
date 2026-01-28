@@ -1,5 +1,5 @@
 # Sudoku-solver
-Code to solve a sudoku for fun (no AI). 
+Code to solve a sudoku for fun.
 
 ![Image](https://media.istockphoto.com/id/172406544/nl/foto/sudoku-puzzle.jpg?s=2048x2048&w=is&k=20&c=oLlnSR9R04iS1OXtooYO73bE_sj7pkrpANzD9APwz6U=)
 

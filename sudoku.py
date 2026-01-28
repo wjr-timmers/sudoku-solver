@@ -1,4 +1,5 @@
 import time
+import itertools
 
 VALUES = [1,2,3,4,5,6,7,8,9]
 
@@ -61,28 +62,20 @@ def check_block(grid, temp_options, cell_coordinate, verbose=False):
 
 
 def check_naked_pairs(list_of_possibilities_in_block, flag="None",verbose=False):
-    # Get naked pairs if any. 
-    pairs = []
-    naked_pairs = []
-    for coordinate, values in list_of_possibilities_in_block:
-        if len(values) == 2:
-            # Check if we already have a pair with the same values
-            found_match = False
-            for pair_coord, pair_values in pairs:
-                if values == pair_values:
-                    # Found a naked pair!
-                    naked_pairs.append((pair_coord, pair_values))
-                    naked_pairs.append((coordinate, values))
-                    #print(f"Naked pair found! {naked_pairs} - flag is {flag}")
-                    found_match = True
-                    break
-            if not found_match:
-                pairs.append((coordinate, values))
+    
+    naked_pairs= []
+    pairs = [x for x in list_of_possibilities_in_block if (len(x[1])==2)]
+
+    for (idx1, val1), (idx2, val2) in itertools.combinations(pairs,2):
+        pair_values = [val1] + [val2]
+        pair_indices = [idx1] + [idx2]
+        union = set().union(*pair_values)
+
+        if len(union) == 2:
+            naked_pairs.append((idx1,val1))
+            naked_pairs.append((idx2,val2))
 
     if len(naked_pairs) != 0:
-        #print(f"Naked pairs", naked_pairs)
-        
-        # Get the coordinates that ARE in the naked pair (to exclude them from removal)
         naked_pair_coordinates = set(coord for coord, vals in naked_pairs)
 
         for coordinate, values in list_of_possibilities_in_block:
@@ -100,6 +93,73 @@ def check_naked_pairs(list_of_possibilities_in_block, flag="None",verbose=False)
 
     return list_of_possibilities_in_block
 
+def check_naked_triples(list_of_possibilities_in_block, flag="None",verbose=False):
+    
+    naked_triples = []
+    triples_and_pairs = [x for x in list_of_possibilities_in_block if (len(x[1])==2 or len(x[1])==3)]
+
+    for (idx1, val1), (idx2, val2), (idx3, val3) in itertools.combinations(triples_and_pairs,3):
+        triple_values = [val1] + [val2] + [val3]
+        triple_indices = [idx1] + [idx2] + [idx3]
+        union = set().union(*triple_values)
+
+        if len(union) == 3:
+            naked_triples.append((idx1,val1))
+            naked_triples.append((idx2,val2))
+            naked_triples.append((idx3,val3))
+
+    if len(naked_triples) != 0:
+        naked_triple_coordinates = set(coord for coord, vals in naked_triples)
+
+        for coordinate, values in list_of_possibilities_in_block:
+            # Skip if this cell IS part of the naked triple
+            if coordinate in naked_triple_coordinates:
+                continue
+            
+            # Remove naked triple values from other cells
+            for naked_coord, naked_values in naked_triples:
+                for naked_value in naked_values:
+                    if naked_value in values:
+                        if verbose:
+                            print(f"|---------- Removed {naked_value} from {values} in cell {coordinate} (naked triple, {flag})")
+                        values.remove(naked_value)
+
+    return list_of_possibilities_in_block
+
+
+def check_naked_quads(list_of_possibilities_in_block, flag="None",verbose=False):
+    
+    naked_quads = []
+    quads_triples_and_pairs = [x for x in list_of_possibilities_in_block if (len(x[1])==2 or len(x[1])==3 or len(x[1])==4)]
+
+    for (idx1, val1), (idx2, val2), (idx3, val3), (idx4, val4) in itertools.combinations(quads_triples_and_pairs,4):
+        quad_values = [val1] + [val2] + [val3] + [val4]
+        quad_indices = [idx1] + [idx2] + [idx3] + [idx4]
+        union = set().union(*quad_values)
+
+        if len(union) == 4:
+            naked_quads.append((idx1,val1))
+            naked_quads.append((idx2,val2))
+            naked_quads.append((idx3,val3))
+            naked_quads.append((idx4,val4))
+
+    if len(naked_quads) != 0:
+        naked_quad_coordinates = set(coord for coord, vals in naked_quads)
+
+        for coordinate, values in list_of_possibilities_in_block:
+            # Skip if this cell IS part of the naked quad
+            if coordinate in naked_quad_coordinates:
+                continue
+            
+            # Remove naked quad values from other cells
+            for naked_coord, naked_values in naked_quads:
+                for naked_value in naked_values:
+                    if naked_value in values:
+                        if verbose:
+                            print(f"|---------- Removed {naked_value} from {values} in cell {coordinate} (naked quad, {flag})")
+                        values.remove(naked_value)
+
+    return list_of_possibilities_in_block
 
 
 def check_block_options(option_grid, cell_coordinate, verbose=False):
@@ -146,12 +206,12 @@ def check_block_options(option_grid, cell_coordinate, verbose=False):
     coordinates_col = [(i, col_idx) for i in range(0,9)]
     coordinates_row = [(row_idx,j) for j in range(0,9)]
 
-    list_of_possibilities_in_block = []
+    list_of_possibilities_block_total = []
     list_of_possibitlies_row_total = []
     list_of_possibitlies_col_total = []
 
     for i,j in coordinates_block:
-        list_of_possibilities_in_block.append(((i,j),option_grid[i][j])) # Cell coordinates and possible values
+        list_of_possibilities_block_total.append(((i,j),option_grid[i][j])) # Cell coordinates and possible values
     
     for i,j in coordinates_row:
         list_of_possibitlies_row_total.append(((i,j), option_grid[i][j]))
@@ -160,15 +220,24 @@ def check_block_options(option_grid, cell_coordinate, verbose=False):
         list_of_possibitlies_col_total.append(((i,j), option_grid[i][j]))
 
 
-    assert len(list_of_possibilities_in_block) == 9
+    assert len(list_of_possibilities_block_total) == 9
     assert len(list_of_possibitlies_row_total) == 9
     assert len(list_of_possibitlies_col_total) == 9
 
-    list_of_possibilities_in_block = check_naked_pairs(list_of_possibilities_in_block, flag='block',verbose=verbose)
+
+    list_of_possibilities_block_total = check_naked_pairs(list_of_possibilities_block_total, flag='block',verbose=verbose)
     list_of_possibitlies_row_total = check_naked_pairs(list_of_possibitlies_row_total, flag='row',verbose=verbose)
     list_of_possibitlies_col_total= check_naked_pairs(list_of_possibitlies_col_total, flag='col',verbose=verbose)
 
-    list_of_possibilities = list_of_possibilities_in_block + list_of_possibitlies_row_total + list_of_possibitlies_col_total
+    list_of_possibilities_block_total = check_naked_triples(list_of_possibilities_block_total, flag="block",verbose=verbose)
+    list_of_possibitlies_row_total = check_naked_triples(list_of_possibitlies_col_total, flag="row",verbose=verbose)
+    list_of_possibitlies_col_total = check_naked_triples(list_of_possibitlies_row_total, flag="col",verbose=verbose)
+
+    list_of_possibilities_block_total = check_naked_quads(list_of_possibilities_block_total, flag="block",verbose=verbose)
+    list_of_possibitlies_row_total = check_naked_quads(list_of_possibitlies_col_total, flag="row",verbose=verbose)
+    list_of_possibitlies_col_total = check_naked_quads(list_of_possibitlies_row_total, flag="col",verbose=verbose)
+
+    list_of_possibilities = list_of_possibilities_block_total + list_of_possibitlies_row_total + list_of_possibitlies_col_total
     list_of_possibilities = [item for item in list_of_possibilities if item[0] != cell_coordinate]
 
     # Deduplicate by coordinate - keep the LONGEST valid list (not [0] or empty)
@@ -299,7 +368,7 @@ def solve_sudoku(grid, counter,total_to_fillin, verbose=False):
 
 # import templates as tpl
 
-# test_grid = tpl.test_grid2
+# test_grid = tpl.test_grid1
 # start = time.time()
 # counter = 0
 # count_zeros = lambda grid: sum(row.count(0) for row in grid)
@@ -307,7 +376,14 @@ def solve_sudoku(grid, counter,total_to_fillin, verbose=False):
 
 # print_grid(test_grid)
 # print('---------')
-# solution = solve_sudoku(test_grid, counter,total_to_fillin)
+# solution, success_flag = solve_sudoku(test_grid, counter, total_to_fillin, verbose=True)
+# print('---------')
+# if success_flag:
+#     print("Final solution:")
+# else:
+#     print("How far we got:")
 # print_grid(solution)
+# print('---------')
 # end = time.time()
-# print(f"Solve took {round(end-start,5)} seconds")
+# if success_flag:
+#     print(f"Solve took {round(end-start,5)} seconds")
