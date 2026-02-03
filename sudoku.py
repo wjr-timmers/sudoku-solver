@@ -62,7 +62,7 @@ def check_block(grid, temp_options, cell_coordinate, verbose=False):
     return temp_options
 
 
-def check_hidden(list_of_possibilities_in_block, flag="None", verbose=False, hidden_quant=2):
+def check_hidden(list_of_possibilities_in_block, option_grid, flag="None", verbose=False, hidden_quant=2):
     
     occurences = {}
     for v in VALUES:
@@ -103,11 +103,13 @@ def check_hidden(list_of_possibilities_in_block, flag="None", verbose=False, hid
                                 type_name = {1: "single", 2: "pair", 3: "triple", 4: "quad"}.get(hidden_quant, "set")
                                 print(f"|-0--0--0-- Removed {v} from cell {coordinate} (hidden {type_name}, {flag})")
                             values.remove(v)
+                            if v in option_grid[coordinate[0]][coordinate[1]]:
+                                option_grid[coordinate[0]][coordinate[1]].remove(v)
 
 
-    return list_of_possibilities_in_block
+    return list_of_possibilities_in_block, option_grid
 
-def check_naked_single(list_of_possibilities_in_block, flag="None",verbose=False):
+def check_naked_single(list_of_possibilities_in_block, option_grid, flag="None",verbose=False):
     
     naked_singles= []
     singles = [x for x in list_of_possibilities_in_block if (len(x[1])==1)]
@@ -135,10 +137,12 @@ def check_naked_single(list_of_possibilities_in_block, flag="None",verbose=False
                         if verbose:
                             print(f"|---------- Removed {naked_value} from {values} in cell {coordinate} (naked single, {flag})")
                         values.remove(naked_value)
+                        if naked_value in option_grid[coordinate[0]][coordinate[1]]:
+                            option_grid[coordinate[0]][coordinate[1]].remove(naked_value)
 
-    return list_of_possibilities_in_block
+    return list_of_possibilities_in_block, option_grid
 
-def check_naked_pairs(list_of_possibilities_in_block, flag="None",verbose=False):
+def check_naked_pairs(list_of_possibilities_in_block, option_grid, flag="None",verbose=False):
     
     naked_pairs= []
     pairs = [x for x in list_of_possibilities_in_block if (len(x[1])==2)]
@@ -167,11 +171,13 @@ def check_naked_pairs(list_of_possibilities_in_block, flag="None",verbose=False)
                         if verbose:
                             print(f"|---------- Removed {naked_value} from {values} in cell {coordinate} (naked pair, {flag})")
                         values.remove(naked_value)
+                        if naked_value in option_grid[coordinate[0]][coordinate[1]]:
+                            option_grid[coordinate[0]][coordinate[1]].remove(naked_value)
 
-    return list_of_possibilities_in_block
+    return list_of_possibilities_in_block,option_grid
 
 
-def check_naked_triples(list_of_possibilities_in_block, flag="None",verbose=False):
+def check_naked_triples(list_of_possibilities_in_block, option_grid, flag="None",verbose=False):
     
     naked_triples = []
     triples_and_pairs = [x for x in list_of_possibilities_in_block if (len(x[1])==2 or len(x[1])==3)]
@@ -201,11 +207,13 @@ def check_naked_triples(list_of_possibilities_in_block, flag="None",verbose=Fals
                         if verbose:
                             print(f"|---------- Removed {naked_value} from {values} in cell {coordinate} (naked triple, {flag})")
                         values.remove(naked_value)
+                        if naked_value in option_grid[coordinate[0]][coordinate[1]]:
+                            option_grid[coordinate[0]][coordinate[1]].remove(naked_value)
 
-    return list_of_possibilities_in_block
+    return list_of_possibilities_in_block,option_grid
 
 
-def check_naked_quads(list_of_possibilities_in_block, flag="None",verbose=False):
+def check_naked_quads(list_of_possibilities_in_block, option_grid, flag="None",verbose=False):
     
     naked_quads = []
     quads_triples_and_pairs = [x for x in list_of_possibilities_in_block if (len(x[1])==2 or len(x[1])==3 or len(x[1])==4)]
@@ -236,12 +244,12 @@ def check_naked_quads(list_of_possibilities_in_block, flag="None",verbose=False)
                         if verbose:
                             print(f"|---------- Removed {naked_value} from {values} in cell {coordinate} (naked quad, {flag})")
                         values.remove(naked_value)
+                        if naked_value in option_grid[coordinate[0]][coordinate[1]]:
+                            option_grid[coordinate[0]][coordinate[1]].remove(naked_value)
 
-    return list_of_possibilities_in_block
+    return list_of_possibilities_in_block,option_grid
 
-
-def check_block_options(option_grid, cell_coordinate, verbose=False):
-
+def get_block_options(cell_coordinate, option_grid, verbose=False):
     row_idx,col_idx = cell_coordinate
     current_possibilities = option_grid[row_idx][col_idx]
 
@@ -302,31 +310,16 @@ def check_block_options(option_grid, cell_coordinate, verbose=False):
     assert len(list_of_possibitlies_row_total) == 9
     assert len(list_of_possibitlies_col_total) == 9
 
-    list_of_possibilities_block_total = check_naked_single(list_of_possibilities_block_total, flag='block',verbose=verbose)
-    list_of_possibitlies_row_total = check_naked_single(list_of_possibitlies_row_total, flag='row',verbose=verbose)
-    list_of_possibitlies_col_total= check_naked_single(list_of_possibitlies_col_total, flag='col',verbose=verbose)
+    return list_of_possibilities_block_total, list_of_possibitlies_row_total, list_of_possibitlies_col_total
 
-    list_of_possibilities_block_total = check_naked_pairs(list_of_possibilities_block_total, flag='block',verbose=verbose)
-    list_of_possibitlies_row_total = check_naked_pairs(list_of_possibitlies_row_total, flag='row',verbose=verbose)
-    list_of_possibitlies_col_total= check_naked_pairs(list_of_possibitlies_col_total, flag='col',verbose=verbose)
 
-    list_of_possibilities_block_total = check_naked_triples(list_of_possibilities_block_total, flag="block",verbose=verbose)
-    list_of_possibitlies_row_total = check_naked_triples(list_of_possibitlies_col_total, flag="row",verbose=verbose)
-    list_of_possibitlies_col_total = check_naked_triples(list_of_possibitlies_row_total, flag="col",verbose=verbose)
-
-    list_of_possibilities_block_total = check_naked_quads(list_of_possibilities_block_total, flag="block",verbose=verbose)
-    list_of_possibitlies_row_total = check_naked_quads(list_of_possibitlies_col_total, flag="row",verbose=verbose)
-    list_of_possibitlies_col_total = check_naked_quads(list_of_possibitlies_row_total, flag="col",verbose=verbose)
-
-    # Check the hidden single, pairs, triples and quads
-    for i in range(1,5):
-        list_of_possibilities_block_total = check_hidden(list_of_possibilities_block_total, flag="block",verbose=verbose, hidden_quant=i)
-        list_of_possibitlies_row_total = check_hidden(list_of_possibitlies_col_total, flag="row",verbose=verbose, hidden_quant=i)
-        list_of_possibitlies_col_total = check_hidden(list_of_possibitlies_row_total, flag="col",verbose=verbose, hidden_quant=i)
-
-    list_of_possibilities = list_of_possibilities_block_total + list_of_possibitlies_row_total + list_of_possibitlies_col_total
+def check_if_fill_in(list_of_possibilities, cell_coordinate, option_grid, verbose=False):
+    
+    #list_of_possibilities = list_of_possibilities_block_total + list_of_possibitlies_row_total + list_of_possibitlies_col_total
     list_of_possibilities = [item for item in list_of_possibilities if item[0] != cell_coordinate]
-
+    
+    row_idx,col_idx = cell_coordinate
+    current_possibilities = option_grid[row_idx][col_idx]
 
     # Deduplicate by coordinate - keep the LONGEST valid list (not [0] or empty)
     coord_dict = {}
@@ -379,19 +372,227 @@ def check_block_options(option_grid, cell_coordinate, verbose=False):
         if verbose:
             print('We have a unique cell!!')
         #print(f"----------------- {value_to_fill} is a solution for cell ({row_idx},{col_idx})")
-        return value_to_fill
+        return value_to_fill, option_grid
     else:
-        return None
+        return None, option_grid
+
+
+def check_block_options(option_grid, cell_coordinate, verbose=False):
+
+
+    list_of_possibilities_block_total, list_of_possibitlies_row_total, list_of_possibitlies_col_total = get_block_options(cell_coordinate, option_grid, verbose=verbose)
+
+   
+    list_of_possibilities_block_total, option_grid = check_naked_single(list_of_possibilities_block_total, option_grid, flag='block',verbose=verbose)
     
-
-def solve_sudoku(grid, counter,total_to_fillin, verbose=False):
-        
-    if counter == total_to_fillin:
+    value_to_fill_in, option_grid = check_if_fill_in(list_of_possibilities_block_total, cell_coordinate, option_grid, verbose=False)
+    if value_to_fill_in == None:
+        pass
+    else:
         if verbose:
-            print(f"We're done!")
-        success = True
-        return grid, success
+            print("Returning from naked single")
+        return value_to_fill_in, option_grid
 
+    list_of_possibitlies_row_total, option_grid = check_naked_single(list_of_possibitlies_row_total, option_grid, flag='row',verbose=verbose)
+    
+    value_to_fill_in, option_grid = check_if_fill_in(list_of_possibitlies_row_total, cell_coordinate, option_grid, verbose=False)
+    if value_to_fill_in == None:
+        pass
+    else:
+        if verbose:
+            print("Returning from naked single")
+        return value_to_fill_in, option_grid
+    
+    list_of_possibitlies_col_total, option_grid = check_naked_single(list_of_possibitlies_col_total, option_grid, flag='col',verbose=verbose)
+    
+    value_to_fill_in, option_grid = check_if_fill_in(list_of_possibitlies_col_total, cell_coordinate, option_grid, verbose=False)
+    if value_to_fill_in == None:
+        pass
+    else:
+        if verbose:
+            print("Returning from naked single")
+        return value_to_fill_in, option_grid
+
+
+    list_of_possibilities_block_total, option_grid = check_naked_pairs(list_of_possibilities_block_total, option_grid, flag='block',verbose=verbose)
+    
+    value_to_fill_in, option_grid = check_if_fill_in(list_of_possibilities_block_total, cell_coordinate, option_grid, verbose=False)
+    if value_to_fill_in == None:
+        pass
+    else:
+        if verbose:
+            print("Returning from naked pair")
+        return value_to_fill_in, option_grid
+    list_of_possibitlies_row_total, option_grid = check_naked_pairs(list_of_possibitlies_row_total, option_grid, flag='row',verbose=verbose)
+    
+    value_to_fill_in, option_grid = check_if_fill_in(list_of_possibitlies_row_total, cell_coordinate, option_grid, verbose=False)
+    if value_to_fill_in == None:
+        pass
+    else:
+        if verbose:
+            print("Returning from naked pair")
+        return value_to_fill_in, option_grid
+    list_of_possibitlies_col_total, option_grid = check_naked_pairs(list_of_possibitlies_col_total, option_grid, flag='col',verbose=verbose)
+    
+    value_to_fill_in, option_grid = check_if_fill_in(list_of_possibitlies_col_total, cell_coordinate, option_grid, verbose=False)
+    if value_to_fill_in == None:
+        pass
+    else:
+        if verbose:
+            print("Returning from naked pair")
+        return value_to_fill_in, option_grid
+
+    list_of_possibilities_block_total, option_grid = check_naked_triples(list_of_possibilities_block_total, option_grid, flag="block",verbose=verbose)
+    value_to_fill_in, option_grid = check_if_fill_in(list_of_possibilities_block_total, cell_coordinate, option_grid, verbose=False)
+    if value_to_fill_in == None:
+        pass
+    else:
+        if verbose:
+            print("Returning from naked triple")
+        return value_to_fill_in, option_grid
+    
+    list_of_possibitlies_row_total, option_grid = check_naked_triples(list_of_possibitlies_col_total, option_grid, flag="row",verbose=verbose)
+    value_to_fill_in, option_grid = check_if_fill_in(list_of_possibitlies_col_total, cell_coordinate, option_grid, verbose=False)
+    if value_to_fill_in == None:
+        pass
+    else:
+        if verbose:
+            print("Returning from naked triple")
+        return value_to_fill_in, option_grid
+
+    list_of_possibitlies_col_total, option_grid = check_naked_triples(list_of_possibitlies_row_total, option_grid, flag="col",verbose=verbose)
+    value_to_fill_in, option_grid = check_if_fill_in(list_of_possibitlies_row_total, cell_coordinate, option_grid, verbose=False)
+    if value_to_fill_in == None:
+        pass
+    else:
+        if verbose:
+            print("Returning from naked triple")
+        return value_to_fill_in, option_grid
+
+
+    list_of_possibilities_block_total, option_grid = check_naked_quads(list_of_possibilities_block_total, option_grid, flag="block",verbose=verbose)
+    value_to_fill_in, option_grid = check_if_fill_in(list_of_possibilities_block_total, cell_coordinate, option_grid, verbose=False)
+    if value_to_fill_in == None:
+        pass
+    else:
+        if verbose:
+            print("Returning from naked quad")
+        return value_to_fill_in, option_grid
+
+    list_of_possibitlies_row_total, option_grid = check_naked_quads(list_of_possibitlies_col_total, option_grid, flag="row",verbose=verbose)
+    value_to_fill_in, option_grid = check_if_fill_in(list_of_possibitlies_col_total, cell_coordinate, option_grid, verbose=False)
+    if value_to_fill_in == None:
+        pass
+    else:
+        if verbose:
+            print("Returning from naked quad")
+        return value_to_fill_in, option_grid
+
+    list_of_possibitlies_col_total, option_grid = check_naked_quads(list_of_possibitlies_row_total, option_grid, flag="col",verbose=verbose)
+    value_to_fill_in, option_grid = check_if_fill_in(list_of_possibitlies_row_total, cell_coordinate, option_grid, verbose=False)
+    if value_to_fill_in == None:
+        pass
+    else:
+        if verbose:
+            print("Returning from naked quad")
+        return value_to_fill_in, option_grid
+
+
+    # Check the hidden single, pairs, triples and quads
+    for i in range(1,5):
+        list_of_possibilities_block_total, option_grid = check_hidden(list_of_possibilities_block_total, option_grid, flag="block",verbose=verbose, hidden_quant=i)
+        value_to_fill_in, option_grid = check_if_fill_in(list_of_possibilities_block_total, cell_coordinate, option_grid, verbose=False)
+        if value_to_fill_in == None:
+            pass
+        else:
+            if verbose:
+                print("Returning from hidden")
+            return value_to_fill_in, option_grid
+        
+        list_of_possibitlies_row_total, option_grid = check_hidden(list_of_possibitlies_col_total, option_grid, flag="row",verbose=verbose, hidden_quant=i)
+        value_to_fill_in, option_grid = check_if_fill_in(list_of_possibitlies_col_total, cell_coordinate, option_grid, verbose=False)
+        if value_to_fill_in == None:
+            pass
+        else:
+            if verbose:
+                print("Returning from hidden")
+            return value_to_fill_in, option_grid
+        
+        list_of_possibitlies_col_total, option_grid = check_hidden(list_of_possibitlies_row_total, option_grid, flag="col",verbose=verbose, hidden_quant=i)
+        value_to_fill_in, option_grid = check_if_fill_in(list_of_possibitlies_row_total, cell_coordinate, option_grid, verbose=False)
+        if value_to_fill_in == None:
+            pass
+        else:
+            if verbose:
+                print("Returning from hidden")
+            return value_to_fill_in, option_grid
+
+
+    # list_of_possibilities = list_of_possibilities_block_total + list_of_possibitlies_row_total + list_of_possibitlies_col_total
+    # list_of_possibilities = [item for item in list_of_possibilities if item[0] != cell_coordinate]
+    
+    # row_idx,col_idx = cell_coordinate
+    # current_possibilities = option_grid[row_idx][col_idx]
+
+    # #print(list_of_possibilities)
+
+    # # Deduplicate by coordinate - keep the LONGEST valid list (not [0] or empty)
+    # coord_dict = {}
+    # for coordinate, possibilities in list_of_possibilities:
+    #     if coordinate not in coord_dict:
+    #         coord_dict[coordinate] = (coordinate, possibilities)
+    #     else:
+    #         existing_coord, existing_possibilities = coord_dict[coordinate]
+            
+    #         # Skip [0] (filled cells) and empty lists when comparing
+    #         existing_is_valid = existing_possibilities != [0] and len(existing_possibilities) > 0
+    #         new_is_valid = possibilities != [0] and len(possibilities) > 0
+            
+    #         # Prefer valid lists over invalid ones
+    #         if new_is_valid and not existing_is_valid:
+    #             coord_dict[coordinate] = (coordinate, possibilities)
+    #         # If both valid, keep the one with MORE possibilities (intersection would be ideal, but this is simpler)
+    #         elif new_is_valid and existing_is_valid:
+    #             # Actually for counting occurrences, we want to keep all possibilities
+    #             # So keep the longer list
+    #             if len(possibilities) > len(existing_possibilities):
+    #                 coord_dict[coordinate] = (coordinate, possibilities)
+    
+    # list_of_possibilities = list(coord_dict.values())
+
+    # #print(f"Possibitlies for cell ({row_idx},{col_idx}) neighbors = {list_of_possibilities} - {len(list_of_possibilities)}")
+
+    # occurences = {}
+    # for num in range(1,10):
+    #     occurences[num] = 0
+
+    # for coordinate,values in list_of_possibilities:
+    #     for item in values:
+    #         if item == 0:
+    #             pass
+    #         else:
+    #             occurences[item] += 1
+
+    # #print(occurences)
+
+    # key_rem = 0
+    # value_to_fill = 0
+    # for num in current_possibilities:
+    #     #print(f"Value {num} has already have {occurences[num]} occurences")
+    #     if occurences[num] == 0:
+    #         key_rem +=1
+    #         value_to_fill = num
+    
+    # if key_rem == 1:
+    #     if verbose:
+    #         print('We have a unique cell!!')
+    #     #print(f"----------------- {value_to_fill} is a solution for cell ({row_idx},{col_idx})")
+    #     return value_to_fill, option_grid
+    # else:
+    return None, option_grid
+
+
+def get_grid_options(grid, verbose=False):
     options_grid = [[[0] for i in range(9)] for j in range(9)]
 
     for row_idx in range(len(grid)):
@@ -411,15 +612,39 @@ def solve_sudoku(grid, counter,total_to_fillin, verbose=False):
                     col = [row[col_idx] for row in grid]
                     if (v not in row) and (v not in col):
                         possibilities.append(v)
-                        possibilities = check_block(grid,possibilities,(row_idx,col_idx),verbose=verbose)
+                        possibilities = check_block(grid, possibilities,(row_idx,col_idx),verbose=verbose)
                 
                 #print(f"Possibilities are {possibilities} for cell ({row_idx},{col_idx})")
                 options_grid[row_idx][col_idx] = possibilities
 
-     # ...existing code...
-    #print(f"grid options {counter}/{total_to_fillin}")
-    #print_grid(options_grid)
-    #print('sssssssssssssssss')
+    return options_grid
+    
+
+def solve_sudoku(grid, counter,total_to_fillin, verbose=False):
+        
+    if counter == total_to_fillin:
+        if verbose:
+            print(f"We're done!")
+        success = True
+        return grid, success
+
+    options_grid = get_grid_options(grid, verbose=verbose)
+
+    # for row_idx in range(len(options_grid)):
+    #     for col_idx in range(len(options_grid[0])):
+    #         options = options_grid[row_idx][col_idx]
+    #         if len(options) == 1 and options != [0]:
+    #             fill_in_value = options[0]
+    #             if verbose:
+    #                 print(options)
+    #                 print(f"xxxx We can update cell ({row_idx},{col_idx}) with value {fill_in_value}")
+    #             grid[row_idx][col_idx] = fill_in_value
+    #             counter += 1
+    #             if verbose:
+    #                 print(f"xxxxxx Solved {counter} out of {total_to_fillin}")
+    #         else:
+    #             pass
+
 
     fill_in_value = None
     for row_idx in range(len(grid)):
@@ -433,8 +658,9 @@ def solve_sudoku(grid, counter,total_to_fillin, verbose=False):
             
             elif len(cell_value) == 1:
                 fill_in_value = cell_value[0]
+                #Only one option possible. 
             else:
-                fill_in_value = check_block_options(options_grid,(row_idx,col_idx), verbose=verbose)
+                fill_in_value, options_grid = check_block_options(options_grid,(row_idx,col_idx), verbose=verbose)
 
             if fill_in_value == None:
                 #print('Could not update cell')
@@ -453,25 +679,26 @@ def solve_sudoku(grid, counter,total_to_fillin, verbose=False):
     success = False
     return grid,success
 
+if __name__ == "__main__":
 
-import templates as tpl
+    import templates as tpl
 
-test_grid = tpl.test_grid10
-start = time.time()
-counter = 0
-count_zeros = lambda grid: sum(row.count(0) for row in grid)
-total_to_fillin = count_zeros(test_grid)
+    test_grid = tpl.test_grid9
+    start = time.time()
+    counter = 0
+    count_zeros = lambda grid: sum(row.count(0) for row in grid)
+    total_to_fillin = count_zeros(test_grid)
 
-print_grid(test_grid)
-print('---------')
-solution, success_flag = solve_sudoku(test_grid, counter, total_to_fillin, verbose=True)
-print('---------')
-if success_flag:
-    print("Final solution:")
-else:
-    print("How far we got:")
-print_grid(solution)
-print('---------')
-end = time.time()
-if success_flag:
-    print(f"Solve took {round(end-start,5)} seconds")
+    print_grid(test_grid)
+    print('---------')
+    solution, success_flag = solve_sudoku(test_grid, counter, total_to_fillin, verbose=False)
+    print('---------')
+    if success_flag:
+        print("Final solution:")
+    else:
+        print("How far we got:")
+    print_grid(solution)
+    print('---------')
+    end = time.time()
+    if success_flag:
+        print(f"Solve took {round(end-start,5)} seconds")
