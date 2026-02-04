@@ -40,6 +40,7 @@ def solve_chunk(chunk):
         end = time.time()
         
         if success:
+            
             assert solution == solution_data
             success_count += 1
             times.append(round(end - start, 5))
@@ -62,7 +63,7 @@ def solve_many_sudokus_parallel(grids, num_puzzles, chunk_size, num_workers):
     print(f"Using {num_workers} workers")
     
     with Pool(processes=num_workers) as pool:
-        results = list(pool.imap(solve_chunk, chunks))
+        results = list(pool.imap_unordered(solve_chunk, chunks))
     
     total_success = sum(r[0] for r in results)
     all_times = [t for r in results for t in r[1]]
@@ -72,9 +73,9 @@ def solve_many_sudokus_parallel(grids, num_puzzles, chunk_size, num_workers):
 
 def main():
     parser = argparse.ArgumentParser(description="Sudoku Solver Benchmark")
-    parser.add_argument('--num_puzzles', type=int, default=1000, help="Number of puzzles to solve (max is 9 million)")
-    parser.add_argument('--chunk_size', type=int, default=100, help="Number of puzzles to allocate per process")
-    parser.add_argument('--num_workers', type=int, default=10, help="Number of threads to allocate for computing")
+    parser.add_argument('--num_puzzles', type=int, default=1600, help="Number of puzzles to solve (max is 9 million)")
+    parser.add_argument('--chunk_size', type=int, default=200, help="Number of puzzles to allocate per process")
+    parser.add_argument('--num_workers', type=int, default=8, help="Number of threads to allocate for computing")
     args = parser.parse_args()
 
     num_puzzles = args.num_puzzles
