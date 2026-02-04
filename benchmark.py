@@ -33,10 +33,11 @@ def read_grids(filename, num_puzzles):
 def solve_chunk(chunk):
     success_count = 0
     times = []
+    total_guesses = 0
     for grid_data, solution_data in chunk:
         start = time.time()
         count_zeros = sum(row.count(0) for row in grid_data)
-        solution, success = s.solve_sudoku(grid_data, 0, count_zeros)
+        solution, success, guesses = s.solve_sudoku(grid_data, 0, count_zeros)
         end = time.time()
         
         if success:
@@ -44,10 +45,11 @@ def solve_chunk(chunk):
             assert solution == solution_data
             success_count += 1
             times.append(round(end - start, 5))
+            total_guesses += guesses
         else:
             print(solution)
 
-    return success_count, times
+    return success_count, times, total_guesses
 
 
 def make_chunks(lst, chunk_size):
@@ -67,8 +69,9 @@ def solve_many_sudokus_parallel(grids, num_puzzles, chunk_size, num_workers):
     
     total_success = sum(r[0] for r in results)
     all_times = [t for r in results for t in r[1]]
+    total_guesses = sum(r[2] for r in results)
     
-    return total_success, all_times
+    return total_success, all_times, total_guesses
 
 
 def main():
@@ -84,12 +87,13 @@ def main():
 
     grids = read_grids('sudoku.csv', num_puzzles)
     start = time.time()
-    success_count, times = solve_many_sudokus_parallel(grids, num_puzzles, chunk_size, num_workers)
+    success_count, times, total_guesses = solve_many_sudokus_parallel(grids, num_puzzles, chunk_size, num_workers)
     total_time = time.time() - start
 
     mins, secs = divmod(total_time, 60)
     print(f"Solved {success_count} puzzles ({round((success_count/num_puzzles)*100,2)}%) in {int(mins)}m {secs:.2f}s total")
     print(f"Average {sum(times)/success_count:.5f} seconds per puzzle")
+    print(f"Total guesses: {total_guesses} (avg {total_guesses/success_count:.2f} per puzzle)")
 
 
 if __name__ == '__main__':

@@ -1,6 +1,7 @@
 import time
 import itertools
 from collections import defaultdict
+import random
 
 VALUES = [1,2,3,4,5,6,7,8,9]
 _BLOCK_COORDINATES_CACHE = None
@@ -324,19 +325,26 @@ def propagate_constraint(options_grid, row_idx, col_idx, fill_in_value):
     return options_grid
 
 
-def solve_sudoku(grid, counter,total_to_fillin, verbose=False, recalculated_grid=None):
+def solve_sudoku(grid, counter,total_to_fillin, verbose=False, recalculated_grid=None, guessed=False, guess_count=0):
+    
+
         
     if counter == total_to_fillin:
         if verbose:
             print(f"We're done!")
         success = True
-        return grid, success
+        return grid, success, guess_count
 
     if recalculated_grid == None:
         options_grid = get_grid_options(grid, verbose=verbose)
     else:
         options_grid = recalculated_grid
 
+
+    if guessed and check_for_contradiction(options_grid):
+        if verbose:
+            print("Contradiction found! Backtracking...")
+        return grid, False, guess_count
 
     fill_in_value = None
     for row_idx in range(len(grid)):
@@ -368,12 +376,70 @@ def solve_sudoku(grid, counter,total_to_fillin, verbose=False, recalculated_grid
                 counter += 1
                 if verbose:
                     print(f"Solved {counter} out of {total_to_fillin}")
-                return solve_sudoku(grid, counter,total_to_fillin, verbose=verbose, recalculated_grid=options_grid)
+                return solve_sudoku(grid, counter,total_to_fillin, verbose=verbose, recalculated_grid=options_grid, guessed=False, guess_count=guess_count)
     
     if verbose:
-        print("We're stuck here...")
-    success = False
-    return grid,success
+        print("Not found a solution, we try guessing now...")
+
+
+    best_cell = None
+    min_options = 10
+    for row_idx in range(9):
+        for col_idx in range(9):
+            cell_value = options_grid[row_idx][col_idx]
+            if cell_value != [0] and len(cell_value) >= 2 and len(cell_value) < min_options:
+                min_options = len(cell_value)
+                best_cell = (row_idx, col_idx, cell_value)
+
+    if best_cell is None:
+        return grid, False, guess_count
+
+    row_idx, col_idx, options = best_cell
+    
+    # Try each option with backtracking
+    for guess in options:
+        if verbose:
+            print(f"*****DIFFICULT******* - Guessing cell ({row_idx},{col_idx}) = {guess} (options were {options})")
+        
+        # Save state before guessing (deep copy)
+        grid_backup = copy.deepcopy(grid)
+        options_grid_backup = copy.deepcopy(options_grid)
+        
+        # Make the guess
+        grid[row_idx][col_idx] = guess
+        options_grid[row_idx][col_idx] = [0]
+        options_grid = propagate_constraint(options_grid, row_idx, col_idx, guess)
+        guess_count += 1
+        
+        # Recurse with guessed=True
+        result_grid, success, guess_count = solve_sudoku(grid, counter + 1, total_to_fillin, verbose=verbose, recalculated_grid=options_grid, guessed=True, guess_count=guess_count)
+        
+        if success:
+            return result_grid, True, guess_count
+        else:
+            # Restore state and try next option
+            if verbose:
+                print(f"Guess {guess} at ({row_idx},{col_idx}) failed, backtracking...")
+            grid = grid_backup
+            options_grid = options_grid_backup
+    
+    # All guesses failed
+    return grid, False, guess_count
+
+
+import copy
+
+def check_for_contradiction(options_grid):
+    """Check if any unfilled cell has no options left (empty list) - means we hit a dead end."""
+    for row_idx in range(9):
+        for col_idx in range(9):
+            cell = options_grid[row_idx][col_idx]
+            # If cell is not filled ([0]) and has no options, we have a contradiction
+            if cell != [0] and len(cell) == 0:
+                return True
+    return False
+
+
 
 if __name__ == "__main__":
 
@@ -388,7 +454,7 @@ if __name__ == "__main__":
     print("Initial grid:")
     print_grid(test_grid)
     print('---------')
-    solution, success_flag = solve_sudoku(test_grid, counter, total_to_fillin, verbose=True)
+    solution, success_flag, total_guesses = solve_sudoku(test_grid, counter, total_to_fillin, verbose=True)
     print('---------')
     if success_flag:
         print("Final solution:")
@@ -399,3 +465,4 @@ if __name__ == "__main__":
     end = time.time()
     if success_flag:
         print(f"Solve took {round(end-start,5)} seconds")
+        print(f"Total guesses: {total_guesses}")
