@@ -379,15 +379,16 @@ if __name__ == "__main__":
 
     import templates as tpl
 
-    test_grid = tpl.test_grid9
+    test_grid = tpl.test_grid39
     start = time.time()
     counter = 0
     count_zeros = lambda grid: sum(row.count(0) for row in grid)
     total_to_fillin = count_zeros(test_grid)
 
+    print("Initial grid:")
     print_grid(test_grid)
     print('---------')
-    solution, success_flag = solve_sudoku(test_grid, counter, total_to_fillin, verbose=False)
+    solution, success_flag = solve_sudoku(test_grid, counter, total_to_fillin, verbose=True)
     print('---------')
     if success_flag:
         print("Final solution:")
