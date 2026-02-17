@@ -454,24 +454,25 @@ def solve_sudoku(grid, counter,total_to_fillin, verbose=False):
     return grid,success
 
 
-import templates as tpl
+if __name__ == '__main__':
+    import templates as tpl
 
-test_grid = tpl.test_grid10
-start = time.time()
-counter = 0
-count_zeros = lambda grid: sum(row.count(0) for row in grid)
-total_to_fillin = count_zeros(test_grid)
+    test_grid = tpl.test_grid10
+    start = time.time()
+    counter = 0
+    count_zeros = lambda grid: sum(row.count(0) for row in grid)
+    total_to_fillin = count_zeros(test_grid)
 
-print_grid(test_grid)
-print('---------')
-solution, success_flag = solve_sudoku(test_grid, counter, total_to_fillin, verbose=True)
-print('---------')
-if success_flag:
-    print("Final solution:")
-else:
-    print("How far we got:")
-print_grid(solution)
-print('---------')
-end = time.time()
-if success_flag:
-    print(f"Solve took {round(end-start,5)} seconds")
+    print_grid(test_grid)
+    print('---------')
+    solution, success_flag = solve_sudoku(test_grid, counter, total_to_fillin, verbose=True)
+    print('---------')
+    if success_flag:
+        print("Final solution:")
+    else:
+        print("How far we got:")
+    print_grid(solution)
+    print('---------')
+    end = time.time()
+    if success_flag:
+        print(f"Solve took {round(end-start,5)} seconds")
