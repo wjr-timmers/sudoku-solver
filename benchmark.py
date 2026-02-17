@@ -33,20 +33,22 @@ def read_grids(filename, num_puzzles):
 def solve_chunk(chunk):
     success_count = 0
     times = []
+    total_guesses = 0
     for grid_data, solution_data in chunk:
         start = time.time()
         count_zeros = sum(row.count(0) for row in grid_data)
-        solution, success = s.solve_sudoku(grid_data, 0, count_zeros)
+        solution, success, guesses = s.solve_sudoku(grid_data, 0, count_zeros)
         end = time.time()
         
         if success:
             assert solution == solution_data
             success_count += 1
             times.append(round(end - start, 5))
+            total_guesses += guesses
         # else:
         #     print(solution)
 
-    return success_count, times
+    return success_count, times, total_guesses
 
 
 def make_chunks(iterable, chunk_size):
@@ -70,18 +72,20 @@ def solve_many_sudokus_parallel(grids, num_puzzles, chunk_size, num_workers):
     
     total_success = 0
     all_times = []
+    total_guesses = 0
     chunk_count = 0
     
     with Pool(processes=num_workers) as pool:
         # Process results as they arrive instead of loading all into memory
-        for success_count, times in pool.imap_unordered(solve_chunk, chunks):
+        for success_count, times, guesses in pool.imap_unordered(solve_chunk, chunks):
             total_success += success_count
             all_times.extend(times)
+            total_guesses += guesses
             chunk_count += 1
             if chunk_count % 10 == 0:
                 print(f"Processed {chunk_count * chunk_size} puzzles ({total_success} successful)")
     
-    return total_success, all_times
+    return total_success, all_times, total_guesses
 
 
 def main():
@@ -97,13 +101,14 @@ def main():
 
     grids = read_grids('sudoku.csv', num_puzzles)  # Generator, doesn't load all at once
     start = time.time()
-    success_count, times = solve_many_sudokus_parallel(grids, num_puzzles, chunk_size, num_workers)
+    success_count, times, total_guesses = solve_many_sudokus_parallel(grids, num_puzzles, chunk_size, num_workers)
     total_time = time.time() - start
 
     mins, secs = divmod(total_time, 60)
     if success_count > 0:
         print(f"Solved {success_count} puzzles ({round((success_count/num_puzzles)*100,2)}%) in {int(mins)}m {secs:.2f}s total")
         print(f"Average {sum(times)/success_count:.5f} seconds per puzzle")
+        print(f"Total guesses: {total_guesses} (avg {total_guesses/success_count:.2f} per puzzle)")
     else:
         print(f"No puzzles solved in {int(mins)}m {secs:.2f}s total")
 
